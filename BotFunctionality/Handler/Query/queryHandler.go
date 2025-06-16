@@ -1,0 +1,21 @@
+package query
+
+import (
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+)
+
+func QueryHandler(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
+	callback := tgbotapi.NewCallback(update.CallbackQuery.ID, "")
+	bot.Request(callback)
+
+	chatID := update.CallbackQuery.Message.Chat.ID
+	cq := update.CallbackQuery
+	dataQuery := cq.Data
+
+	handler, err := CallbackHandlers[dataQuery]
+	if !err {
+		bot.Send(tgbotapi.NewMessage(chatID, "Неизвестная кнопка"))
+		return
+	}
+	handler(bot, update, chatID)
+}
