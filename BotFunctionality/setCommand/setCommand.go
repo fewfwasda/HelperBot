@@ -1,7 +1,7 @@
 package setcommand
 
 import (
-	"HelperBot/Data/texts"
+	texts "HelperBot/Data/textsUI"
 	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"

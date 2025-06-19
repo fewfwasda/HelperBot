@@ -1,13 +1,13 @@
 package messagebuilders
 
 import (
-	"HelperBot/Data/texts"
+	texts "HelperBot/Data/textsUI"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func MyNotes(chatID int64) tgbotapi.MessageConfig {
-	myNotesMessage := tgbotapi.NewMessage(chatID, texts.NotesText)
+func MyNotes(chatID int64, messageID int) tgbotapi.EditMessageTextConfig {
+	myNotesMessage := tgbotapi.NewEditMessageText(chatID, messageID, texts.NotesText)
 
 	showAllNotes := tgbotapi.NewInlineKeyboardButtonData(texts.ShowAllNotesButtonText, texts.ShowAllNotesData)
 	clearAllNotes := tgbotapi.NewInlineKeyboardButtonData(texts.ClearAllNotesButtonText, texts.ClearAllNotesData)
@@ -19,7 +19,7 @@ func MyNotes(chatID int64) tgbotapi.MessageConfig {
 		tgbotapi.NewInlineKeyboardRow(addNote, deleteNote),
 	)
 
-	myNotesMessage.ReplyMarkup = keyboard
+	myNotesMessage.ReplyMarkup = &keyboard
 
 	return myNotesMessage
 }

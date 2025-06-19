@@ -1,7 +1,7 @@
 package messagebuilders
 
 import (
-	"HelperBot/Data/texts"
+	texts "HelperBot/Data/textsUI"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
