@@ -3,6 +3,7 @@ package main
 import (
 	query "HelperBot/BotFunctionality/Handler/Query"
 	usertext "HelperBot/BotFunctionality/Handler/UserText"
+	setcommand "HelperBot/BotFunctionality/setCommand"
 	"log"
 	"os"
 
@@ -25,7 +26,7 @@ func main() {
 		log.Panic(err)
 	}
 
-	// setcommand.SetCommand(bot)
+	setcommand.SetCommand(bot)
 
 	log.Printf("Autorization on account %v", bot.Self.UserName)
 
@@ -33,8 +34,6 @@ func main() {
 	u.Timeout = 60
 
 	updates := bot.GetUpdatesChan(u)
-
-	// tasks := make(map[int][]string)
 
 	for update := range updates {
 		if update.Message != nil {

@@ -9,23 +9,25 @@ import (
 
 var UserNotes = make(map[int][]string)
 
-func AddNote(userID int, note string) {
-	UserNotes[userID] = append(UserNotes[userID], note)
+func AddNote(userID int, addNote string) string {
+	UserNotes[userID] = append(UserNotes[userID], addNote)
+
+	return fmt.Sprintf(texts.ReplyToUserDeleteNote, addNote)
 }
 
-func DeleteNote(userID int, number string) (string, error) {
+func DeleteNote(userID int, number string) string {
 	noteNumber, _ := strconv.Atoi(number)
 
 	index := noteNumber - 1
 	userNotes, err := UserNotes[userID]
 	if !err || index < 0 || index >= len(userNotes) {
-		return "", fmt.Errorf("невозможно удалить задачу с номером %v", noteNumber)
+		return fmt.Sprintf(texts.ErrFailDeleteNote, noteNumber)
 	}
 	removedNote := userNotes[index]
 
 	UserNotes[userID] = append(userNotes[:index], userNotes[index+1:]...)
 
-	return fmt.Sprintf("Задача %v удалена %v", noteNumber, removedNote), nil
+	return fmt.Sprintf(texts.ReplyToUserDeleteNote, removedNote)
 }
 
 func ShowNoteList(userID int) string {
@@ -35,7 +37,7 @@ func ShowNoteList(userID int) string {
 	}
 
 	var sb strings.Builder
-	sb.WriteString("Все ваши задачи: \n")
+	sb.WriteString(texts.ReplyToUserShowAllNotes)
 
 	for i, note := range notes {
 		sb.WriteString(formatLine(i+1, note))

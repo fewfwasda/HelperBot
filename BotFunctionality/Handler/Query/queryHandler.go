@@ -1,6 +1,8 @@
 package query
 
 import (
+	texts "HelperBot/Data/textsUI"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -14,7 +16,7 @@ func QueryHandler(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 
 	handler, err := CallbackHandlers[dataQuery]
 	if !err {
-		bot.Send(tgbotapi.NewMessage(chatID, "Неизвестная кнопка"))
+		bot.Send(tgbotapi.NewMessage(chatID, texts.ErrUndefinedButton))
 		return
 	}
 	handler(bot, update, chatID)

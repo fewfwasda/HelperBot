@@ -1,6 +1,7 @@
 package setcommand
 
 import (
+	botcommandText "HelperBot/Data/botCommandText"
 	texts "HelperBot/Data/textsUI"
 	"log"
 
@@ -10,22 +11,30 @@ import (
 func SetCommand(bot *tgbotapi.BotAPI) error {
 	commands := []tgbotapi.BotCommand{
 		{
-			Command:     "showWeather",
-			Description: texts.ShowWeatherButtonText,
+			Command:     botcommandText.AddNote,
+			Description: botcommandText.AddNoteDesc,
 		},
 		{
-			Command:     "clearNotes",
-			Description: texts.ShowWeatherButtonText,
+			Command:     botcommandText.DeleteNote,
+			Description: botcommandText.DeleteNoteDesc,
 		},
 		{
-			Command:     "showNotes",
-			Description: texts.ShowAllNotesButtonText,
+			Command:     botcommandText.ShowAllNotes,
+			Description: botcommandText.ShowAllNotesDesc,
+		},
+		{
+			Command:     botcommandText.ClearAllNotes,
+			Description: botcommandText.ClearAllNotesDesc,
+		},
+		{
+			Command:     botcommandText.ShowWeather,
+			Description: botcommandText.ShowWeatherDesc,
 		},
 	}
 	setCommands := tgbotapi.NewSetMyCommands(commands...)
 	_, err := bot.Request(setCommands)
 	if err != nil {
-		log.Printf("Не удалось установить команды: %v", err)
+		log.Printf(texts.ErrToInstallCommands, err)
 		return err
 	}
 	return nil
