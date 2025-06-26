@@ -2,7 +2,7 @@ package botstates
 
 var BotStates = make(map[int]string)
 
-func SetSate(userID int, state string) {
+func SetState(userID int, state string) {
 	BotStates[userID] = state
 }
 func GetState(userID int) string {

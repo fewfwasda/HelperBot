@@ -30,6 +30,11 @@ func SetCommand(bot *tgbotapi.BotAPI) error {
 			Command:     botcommandText.ShowWeather,
 			Description: botcommandText.ShowWeatherDesc,
 		},
+
+		{
+			Command:     botcommandText.ConfigUserNotes,
+			Description: botcommandText.ConfigUserNotesDesc,
+		},
 	}
 	setCommands := tgbotapi.NewSetMyCommands(commands...)
 	_, err := bot.Request(setCommands)

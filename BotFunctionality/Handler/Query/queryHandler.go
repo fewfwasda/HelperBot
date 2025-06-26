@@ -14,8 +14,8 @@ func QueryHandler(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	cq := update.CallbackQuery
 	dataQuery := cq.Data
 
-	handler, err := CallbackHandlers[dataQuery]
-	if !err {
+	handler, ok := CallbackHandlers[dataQuery]
+	if !ok {
 		bot.Send(tgbotapi.NewMessage(chatID, texts.ErrUndefinedButton))
 		return
 	}

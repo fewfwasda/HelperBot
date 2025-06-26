@@ -12,15 +12,15 @@ var UserNotes = make(map[int][]string)
 func AddNote(userID int, addNote string) string {
 	UserNotes[userID] = append(UserNotes[userID], addNote)
 
-	return fmt.Sprintf(texts.ReplyToUserDeleteNote, addNote)
+	return fmt.Sprintf(texts.ReplyToUserAddNote, addNote)
 }
 
 func DeleteNote(userID int, number string) string {
 	noteNumber, _ := strconv.Atoi(number)
 
 	index := noteNumber - 1
-	userNotes, err := UserNotes[userID]
-	if !err || index < 0 || index >= len(userNotes) {
+	userNotes, ok := UserNotes[userID]
+	if !ok || index < 0 || index >= len(userNotes) {
 		return fmt.Sprintf(texts.ErrFailDeleteNote, noteNumber)
 	}
 	removedNote := userNotes[index]

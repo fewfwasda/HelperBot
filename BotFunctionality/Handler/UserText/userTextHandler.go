@@ -39,10 +39,11 @@ func UserTextHandler(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 
 	switch userMessage {
 	case "/" + botcommandText.ShowWeather:
-		messageID := update.CallbackQuery.Message.MessageID
-		bot.Send(messagebuilders.Weather(chatID, messageID, 15))
+		bot.Send(messagebuilders.WeatherMessage(chatID))
+	case "/" + botcommandText.ConfigUserNotes:
+		bot.Send(messagebuilders.ConfigUserNotesMessage(chatID))
 	case "/" + botcommandText.AddNote:
-		botstates.SetSate(int(userID), botstatestext.WaitAddNote)
+		botstates.SetState(int(userID), botstatestext.WaitAddNote)
 		msg := tgbotapi.NewMessage(chatID, texts.WaitingAddNote)
 		bot.Send(msg)
 	case "/" + botcommandText.ClearAllNotes:
@@ -50,7 +51,7 @@ func UserTextHandler(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 		msg := tgbotapi.NewMessage(chatID, texts.ReplyToUserClearNote)
 		bot.Send(msg)
 	case "/" + botcommandText.DeleteNote:
-		botstates.SetSate(int(userID), botstatestext.WaitDeleteNote)
+		botstates.SetState(int(userID), botstatestext.WaitDeleteNote)
 		msg := tgbotapi.NewMessage(chatID, texts.WaitingDeleteNote)
 		bot.Send(msg)
 	case "/" + botcommandText.ShowAllNotes:
@@ -58,6 +59,6 @@ func UserTextHandler(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 		msg := tgbotapi.NewMessage(chatID, messageText)
 		bot.Send(msg)
 	default:
-		bot.Send(messagebuilders.Welcome(chatID))
+		bot.Send(messagebuilders.WelcomeMessage(chatID))
 	}
 }

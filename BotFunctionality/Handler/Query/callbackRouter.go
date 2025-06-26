@@ -11,22 +11,23 @@ import (
 )
 
 var CallbackHandlers = map[string]func(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64){
-	texts.MyNotesData:       handleMyNotes,
-	texts.ShowWeatherData:   handleShowWeather,
-	texts.ShowAllNotesData:  handleShowAllNotes,
-	texts.ClearAllNotesData: handleClearAllNotes,
-	texts.AddNoteData:       handleAddNote,
-	texts.DeleteNoteData:    handleDeleteNote,
+	texts.UserNotesButtonData:     handleConfigUserNotes,
+	texts.ShowWeatherButtonData:   handleShowWeather,
+	texts.ShowAllNotesButtonData:  handleShowAllNotes,
+	texts.ClearAllNotesButtonData: handleClearAllNotes,
+	texts.AddNoteButtonData:       handleAddNote,
+	texts.DeleteNoteButtonData:    handleDeleteNote,
+	texts.BackButtonData:          handleBack,
 }
 
-func handleMyNotes(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64) {
+func handleConfigUserNotes(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64) {
 	messageID := update.CallbackQuery.Message.MessageID
-	bot.Send(messagebuilders.MyNotes(chatID, messageID))
+	bot.Send(messagebuilders.ConfigUserNotes(chatID, messageID))
 }
 
 func handleShowWeather(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64) {
 	messageID := update.CallbackQuery.Message.MessageID
-	bot.Send(messagebuilders.Weather(chatID, messageID, 15))
+	bot.Send(messagebuilders.Weather(chatID, messageID))
 }
 
 func handleShowAllNotes(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64) {
@@ -50,7 +51,7 @@ func handleClearAllNotes(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID in
 func handleAddNote(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64) {
 	userID := update.CallbackQuery.From.ID
 
-	botstates.SetSate(int(userID), botstatestext.WaitAddNote)
+	botstates.SetState(int(userID), botstatestext.WaitAddNote)
 
 	msg := tgbotapi.NewMessage(chatID, texts.WaitingAddNote)
 	bot.Send(msg)
@@ -59,8 +60,13 @@ func handleAddNote(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64) {
 func handleDeleteNote(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64) {
 	userID := update.CallbackQuery.From.ID
 
-	botstates.SetSate(int(userID), botstatestext.WaitDeleteNote)
+	botstates.SetState(int(userID), botstatestext.WaitDeleteNote)
 
 	msg := tgbotapi.NewMessage(chatID, texts.WaitingDeleteNote)
 	bot.Send(msg)
+}
+
+func handleBack(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64) {
+	messageID := update.CallbackQuery.Message.MessageID
+	bot.Send(messagebuilders.Welcome(chatID, messageID))
 }
