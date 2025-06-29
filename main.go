@@ -2,8 +2,10 @@ package main
 
 import (
 	query "HelperBot/BotFunctionality/Handler/Query"
-	usertext "HelperBot/BotFunctionality/Handler/UserText"
+	usertext "HelperBot/BotFunctionality/Handler/usertexthandler"
+	notemanager "HelperBot/BotFunctionality/noteManager"
 	setcommand "HelperBot/BotFunctionality/setCommand"
+	weathermanager "HelperBot/BotFunctionality/weatherManager"
 	"log"
 	"os"
 
@@ -12,7 +14,16 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
+	if err := weathermanager.LoadCities(); err != nil {
+		log.Fatalf("Не удалось загрузить города пользователей %v", err)
+	}
+
+	err := notemanager.LoadFromDisk()
+	if err != nil {
+		log.Fatalf("Ошибка при загрузки заметок: %v", err)
+	}
+
+	err = godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error load env file %v", err)
 	}

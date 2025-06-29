@@ -14,13 +14,11 @@ func Weather(chatID int64, messageID int) tgbotapi.EditMessageTextConfig {
 	weatherMessage := tgbotapi.NewEditMessageText(chatID, messageID, weather)
 
 	tomorrow := tgbotapi.NewInlineKeyboardButtonData(texts.TomorrowButtonText, texts.TomorrowButtonData)
-	dayAfterTomorrow := tgbotapi.NewInlineKeyboardButtonData(texts.DayAfterTomorrowButtonText, texts.DayAfterTomorrowButtonData)
 	nextWeek := tgbotapi.NewInlineKeyboardButtonData(texts.NextWeekButtonText, texts.NextWeekButtonData)
 	back := tgbotapi.NewInlineKeyboardButtonData(texts.BackButtonText, texts.BackButtonData)
 
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(tomorrow, dayAfterTomorrow),
-		tgbotapi.NewInlineKeyboardRow(nextWeek),
+		tgbotapi.NewInlineKeyboardRow(tomorrow, nextWeek),
 		tgbotapi.NewInlineKeyboardRow(back),
 	)
 
@@ -33,6 +31,14 @@ func WeatherMessage(chatID int64) tgbotapi.MessageConfig {
 	degrees := 10
 	weather := fmt.Sprintf(texts.WeatherText, degrees)
 	weatherMessage := tgbotapi.NewMessage(chatID, weather)
+
+	tomorrow := tgbotapi.NewInlineKeyboardButtonData(texts.TomorrowButtonText, texts.TomorrowButtonData)
+	nextWeek := tgbotapi.NewInlineKeyboardButtonData(texts.NextWeekButtonText, texts.NextWeekButtonData)
+
+	keyboard := tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(tomorrow, nextWeek),
+	)
+	weatherMessage.ReplyMarkup = &keyboard
 
 	return weatherMessage
 }

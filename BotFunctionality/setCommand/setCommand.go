@@ -1,7 +1,7 @@
 package setcommand
 
 import (
-	botcommandText "HelperBot/Data/botCommandText"
+	botcommandtext "HelperBot/Data/botCommandText"
 	texts "HelperBot/Data/textsUI"
 	"log"
 
@@ -11,29 +11,29 @@ import (
 func SetCommand(bot *tgbotapi.BotAPI) error {
 	commands := []tgbotapi.BotCommand{
 		{
-			Command:     botcommandText.AddNote,
-			Description: botcommandText.AddNoteDesc,
+			Command:     botcommandtext.AddNote,
+			Description: botcommandtext.AddNoteDesc,
 		},
 		{
-			Command:     botcommandText.DeleteNote,
-			Description: botcommandText.DeleteNoteDesc,
+			Command:     botcommandtext.DeleteNote,
+			Description: botcommandtext.DeleteNoteDesc,
 		},
 		{
-			Command:     botcommandText.ShowAllNotes,
-			Description: botcommandText.ShowAllNotesDesc,
+			Command:     botcommandtext.ShowAllNotes,
+			Description: botcommandtext.ShowAllNotesDesc,
 		},
 		{
-			Command:     botcommandText.ClearAllNotes,
-			Description: botcommandText.ClearAllNotesDesc,
+			Command:     botcommandtext.ClearAllNotes,
+			Description: botcommandtext.ClearAllNotesDesc,
 		},
 		{
-			Command:     botcommandText.ShowWeather,
-			Description: botcommandText.ShowWeatherDesc,
+			Command:     botcommandtext.ShowWeather,
+			Description: botcommandtext.ShowWeatherDesc,
 		},
 
 		{
-			Command:     botcommandText.ConfigUserNotes,
-			Description: botcommandText.ConfigUserNotesDesc,
+			Command:     botcommandtext.ConfigUserNotes,
+			Description: botcommandtext.ConfigUserNotesDesc,
 		},
 	}
 	setCommands := tgbotapi.NewSetMyCommands(commands...)
