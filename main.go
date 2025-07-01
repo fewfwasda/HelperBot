@@ -5,7 +5,7 @@ import (
 	usertext "HelperBot/BotFunctionality/Handler/usertexthandler"
 	notemanager "HelperBot/BotFunctionality/noteManager"
 	setcommand "HelperBot/BotFunctionality/setCommand"
-	weathermanager "HelperBot/BotFunctionality/weatherManager"
+	"HelperBot/BotFunctionality/weather"
 	"log"
 	"os"
 
@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	if err := weathermanager.LoadCities(); err != nil {
+	if err := weather.LoadCities(); err != nil {
 		log.Fatalf("Не удалось загрузить города пользователей %v", err)
 	}
 

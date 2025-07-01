@@ -7,7 +7,7 @@ import (
 )
 
 func LocationRequestMessage(chatID int64) tgbotapi.MessageConfig {
-	requestMessage := tgbotapi.NewMessage(chatID, texts.LocationRequestText)
+	requestMessage := tgbotapi.NewMessage(chatID, texts.ReplyToUserLocationRequestText)
 	requestButton := tgbotapi.KeyboardButton{
 		Text:            texts.LocationRequestButtonText,
 		RequestLocation: true,

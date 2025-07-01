@@ -11,12 +11,12 @@ import (
 )
 
 var (
-	UserNotes   = make(map[int][]string)
+	UserNotes   = make(map[int64][]string)
 	storagePath = "UserDataStorage/userNotes.json"
 	mu          sync.Mutex
 )
 
-func AddNote(userID int, addNote string) string {
+func AddNote(userID int64, addNote string) string {
 	mu.Lock()
 	UserNotes[userID] = append(UserNotes[userID], addNote)
 	mu.Unlock()
@@ -25,13 +25,14 @@ func AddNote(userID int, addNote string) string {
 	return fmt.Sprintf(texts.ReplyToUserAddNote, addNote)
 }
 
-func DeleteNote(userID int, number string) string {
+func DeleteNote(userID int64, number string) string {
 	mu.Lock()
 	noteNumber, _ := strconv.Atoi(number)
 
 	index := noteNumber - 1
 	userNotes, ok := UserNotes[userID]
 	if !ok || index < 0 || index >= len(userNotes) {
+		mu.Unlock()
 		return fmt.Sprintf(texts.ErrFailDeleteNote, noteNumber)
 	}
 	removedNote := userNotes[index]
@@ -43,7 +44,7 @@ func DeleteNote(userID int, number string) string {
 	return fmt.Sprintf(texts.ReplyToUserDeleteNote, removedNote)
 }
 
-func ShowNoteList(userID int) string {
+func ShowNoteList(userID int64) string {
 	notes := UserNotes[userID]
 	if len(notes) == 0 {
 		return texts.ErrEmptyNoteList
@@ -58,7 +59,7 @@ func ShowNoteList(userID int) string {
 	return sb.String()
 }
 
-func ClearNoteList(userID int) {
+func ClearNoteList(userID int64) {
 	mu.Lock()
 	delete(UserNotes, userID)
 	mu.Unlock()

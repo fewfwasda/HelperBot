@@ -3,7 +3,7 @@ package usertexthandler
 import (
 	botstates "HelperBot/BotFunctionality/botStates"
 	notemanager "HelperBot/BotFunctionality/noteManager"
-	weathermanager "HelperBot/BotFunctionality/weatherManager"
+	"HelperBot/BotFunctionality/weather"
 	botcommandtext "HelperBot/Data/botCommandText"
 	botstatestext "HelperBot/Data/botStatesText"
 	texts "HelperBot/Data/textsUI"
@@ -18,25 +18,24 @@ func UserTextHandler(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	userID := update.Message.From.ID
 	userMessage := update.Message.Text
 
-	if update.Message.Location != nil {
+	if botstates.GetState(userID) == botstatestext.WaitLocation {
 		handleUserCity(bot, update, chatID, userID)
 		return
 	}
-
-	botState := botstates.GetState(int(userID))
+	botState := botstates.GetState(userID)
 
 	switch botState {
 	case botstatestext.WaitAddNote:
-		answer := notemanager.AddNote(int(userID), userMessage)
-		botstates.ClearState(int(userID))
+		answer := notemanager.AddNote(userID, userMessage)
+		botstates.ClearState(userID)
 
 		msg := tgbotapi.NewMessage(chatID, answer)
 		bot.Send(msg)
 		return
 	case botstatestext.WaitDeleteNote:
 
-		answer := notemanager.DeleteNote(int(userID), userMessage)
-		botstates.ClearState(int(userID))
+		answer := notemanager.DeleteNote(userID, userMessage)
+		botstates.ClearState(userID)
 
 		msg := tgbotapi.NewMessage(chatID, answer)
 
@@ -45,45 +44,98 @@ func UserTextHandler(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 	}
 
 	switch userMessage {
-	case "/" + botcommandtext.ShowWeather:
-		bot.Send(messagebuilders.WeatherMessage(chatID))
 	case "/" + botcommandtext.ConfigUserNotes:
 		bot.Send(messagebuilders.ConfigUserNotesMessage(chatID))
 	case "/" + botcommandtext.AddNote:
-		botstates.SetState(int(userID), botstatestext.WaitAddNote)
+		botstates.SetState(userID, botstatestext.WaitAddNote)
 		msg := tgbotapi.NewMessage(chatID, texts.WaitingAddNote)
 		bot.Send(msg)
 	case "/" + botcommandtext.ClearAllNotes:
-		notemanager.ClearNoteList(int(userID))
+		notemanager.ClearNoteList(userID)
 		msg := tgbotapi.NewMessage(chatID, texts.ReplyToUserClearNote)
 		bot.Send(msg)
 	case "/" + botcommandtext.DeleteNote:
-		botstates.SetState(int(userID), botstatestext.WaitDeleteNote)
+		botstates.SetState(userID, botstatestext.WaitDeleteNote)
 		msg := tgbotapi.NewMessage(chatID, texts.WaitingDeleteNote)
 		bot.Send(msg)
 	case "/" + botcommandtext.ShowAllNotes:
-		messageText := notemanager.ShowNoteList(int(userID))
+		messageText := notemanager.ShowNoteList(userID)
 		msg := tgbotapi.NewMessage(chatID, messageText)
 		bot.Send(msg)
+	case "/" + botcommandtext.ShowWeather:
+		if city, ok := weather.GetUserCity(userID); ok {
+			emoji, desc, temp, err := weather.GetWeather(city)
+			if err != nil {
+				bot.Send(tgbotapi.NewMessage(chatID, err.Error()))
+				return
+			}
+			bot.Send(messagebuilders.Weather(chatID, emoji, desc, city, temp))
+			return
+		}
+		botstates.SetState(userID, botstatestext.WaitLocation)
+		bot.Send(messagebuilders.LocationRequestMessage(chatID))
 	default:
 		bot.Send(messagebuilders.WelcomeMessage(chatID))
 	}
 }
 
+// Преобразовывает координаты пользователя в город и сохраняет, выводя погоду города
 func handleUserCity(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64, userID int64) {
-	if loc := update.Message.Location; loc != nil && botstates.GetState(int(userID)) == botstatestext.WaitLocation {
-		botstates.ClearState(int(userID))
-		city := fmt.Sprintf("%.6f,%.6f", loc.Latitude, loc.Latitude)
+	botstates.ClearState(userID)
+	// обработка кнопки
+	if update.Message.Location != nil {
 
-		if err := weathermanager.SetCity(int(userID), city); err != nil {
-			bot.Send(tgbotapi.NewMessage(chatID, texts.ErrSaveCity+err.Error()))
+		coordinates := update.Message.Location
+
+		lat := coordinates.Latitude
+		lon := coordinates.Longitude
+
+		city, err := weather.ReverseGeocode(lat, lon)
+		if err != nil {
+			bot.Send(tgbotapi.NewMessage(chatID, texts.ErrCouldNotFindCity))
 			return
 		}
+
+		err = weather.SetCity(userID, city)
+
+		if err != nil {
+			bot.Send(tgbotapi.NewMessage(chatID, texts.ErrSaveCity))
+			return
+		}
+
+		emoji, desc, temp, err := weather.GetWeather(city)
+		if err != nil {
+			bot.Send(tgbotapi.NewMessage(chatID, texts.ErrGetWeather))
+			return
+		}
+
 		removeKB := tgbotapi.NewRemoveKeyboard(true)
 		confirm := tgbotapi.NewMessage(chatID, fmt.Sprintf(texts.ReplyToUserSaveCity))
 		confirm.ReplyMarkup = removeKB
 		bot.Send(confirm)
 
-		bot.Send(tgbotapi.NewMessage(chatID, fmt.Sprintf(texts.ReplyToUserShowWeather, city, 15)))
+		bot.Send(messagebuilders.Weather(chatID, emoji, desc, city, temp))
+		return
 	}
+	removeKB := tgbotapi.NewRemoveKeyboard(true)
+
+	city := update.Message.Text
+	emoji, desc, temp, err := weather.GetWeather(city)
+	if err != nil {
+		err := tgbotapi.NewMessage(chatID, texts.ErrCouldNotFindCity)
+		err.ReplyMarkup = removeKB
+		bot.Send(err)
+		return
+	}
+
+	err = weather.SetCity(userID, city)
+	if err != nil {
+		bot.Send(tgbotapi.NewMessage(chatID, texts.ErrSaveCity))
+		return
+	}
+	confirm := tgbotapi.NewMessage(chatID, fmt.Sprintf(texts.ReplyToUserSaveCity))
+	confirm.ReplyMarkup = removeKB
+	bot.Send(confirm)
+
+	bot.Send(messagebuilders.Weather(chatID, emoji, desc, city, temp))
 }

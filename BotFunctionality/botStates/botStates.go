@@ -1,13 +1,13 @@
 package botstates
 
-var BotStates = make(map[int]string)
+var BotStates = make(map[int64]string)
 
-func SetState(userID int, state string) {
+func SetState(userID int64, state string) {
 	BotStates[userID] = state
 }
-func GetState(userID int) string {
+func GetState(userID int64) string {
 	return BotStates[userID]
 }
-func ClearState(userID int) {
+func ClearState(userID int64) {
 	delete(BotStates, userID)
 }
