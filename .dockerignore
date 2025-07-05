@@ -1,0 +1,28 @@
+# Исключаем исполняемые файлы Windows
+HelperBot.exe
+HelperBot.exe~
+
+# Системные и временные файлы
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# Каталоги редакторов
+.vscode/
+.idea/
+
+# Git и история
+.git
+.gitignore
+
+# Конфигурационные файлы
+.env
+
+# Бинарники и кеши Go
+bin/
+build/
+*.exe
+*.out
+*.test

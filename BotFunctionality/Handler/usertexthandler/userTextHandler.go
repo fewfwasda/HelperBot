@@ -8,38 +8,39 @@ import (
 	botstatestext "HelperBot/Data/botStatesText"
 	texts "HelperBot/Data/textsUI"
 	messagebuilders "HelperBot/MessageBuilders"
+	"database/sql"
 	"fmt"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func UserTextHandler(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
+func UserTextHandler(bot *tgbotapi.BotAPI, db *sql.DB, update tgbotapi.Update) {
 	chatID := update.Message.Chat.ID
 	userID := update.Message.From.ID
 	userMessage := update.Message.Text
 
 	if botstates.GetState(userID) == botstatestext.WaitLocation {
-		handleUserCity(bot, update, chatID, userID)
+		handleUserCity(bot, db, update, chatID, userID)
 		return
 	}
 	botState := botstates.GetState(userID)
 
 	switch botState {
 	case botstatestext.WaitAddNote:
-		answer := notemanager.AddNote(userID, userMessage)
+		answer := notemanager.AddNote(db, userID, userMessage)
 		botstates.ClearState(userID)
 
 		msg := tgbotapi.NewMessage(chatID, answer)
 		bot.Send(msg)
 		return
 	case botstatestext.WaitDeleteNote:
-
-		answer := notemanager.DeleteNote(userID, userMessage)
+		answer := notemanager.DeleteNote(db, userID, userMessage)
 		botstates.ClearState(userID)
-
 		msg := tgbotapi.NewMessage(chatID, answer)
-
 		bot.Send(msg)
+		return
+	case botstatestext.WaitLocation:
+		handleUserCity(bot, db, update, chatID, userID)
 		return
 	}
 
@@ -51,7 +52,7 @@ func UserTextHandler(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 		msg := tgbotapi.NewMessage(chatID, texts.WaitingAddNote)
 		bot.Send(msg)
 	case "/" + botcommandtext.ClearAllNotes:
-		notemanager.ClearNoteList(userID)
+		notemanager.ClearNoteList(db, userID)
 		msg := tgbotapi.NewMessage(chatID, texts.ReplyToUserClearNote)
 		bot.Send(msg)
 	case "/" + botcommandtext.DeleteNote:
@@ -59,17 +60,17 @@ func UserTextHandler(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 		msg := tgbotapi.NewMessage(chatID, texts.WaitingDeleteNote)
 		bot.Send(msg)
 	case "/" + botcommandtext.ShowAllNotes:
-		messageText := notemanager.ShowNoteList(userID)
+		messageText := notemanager.NoteList(db, userID)
 		msg := tgbotapi.NewMessage(chatID, messageText)
 		bot.Send(msg)
 	case "/" + botcommandtext.ShowWeather:
-		if city, ok := weather.GetUserCity(userID); ok {
+		if city, ok := weather.GetUserCity(db, userID); ok {
 			emoji, desc, temp, err := weather.GetWeather(city)
 			if err != nil {
 				bot.Send(tgbotapi.NewMessage(chatID, err.Error()))
 				return
 			}
-			bot.Send(messagebuilders.Weather(chatID, emoji, desc, city, temp))
+			bot.Send(messagebuilders.WeatherMessage(chatID, emoji, desc, city, temp))
 			return
 		}
 		botstates.SetState(userID, botstatestext.WaitLocation)
@@ -80,7 +81,7 @@ func UserTextHandler(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
 }
 
 // Преобразовывает координаты пользователя в город и сохраняет, выводя погоду города
-func handleUserCity(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64, userID int64) {
+func handleUserCity(bot *tgbotapi.BotAPI, db *sql.DB, update tgbotapi.Update, chatID int64, userID int64) {
 	botstates.ClearState(userID)
 	// обработка кнопки
 	if update.Message.Location != nil {
@@ -96,7 +97,7 @@ func handleUserCity(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64, 
 			return
 		}
 
-		err = weather.SetCity(userID, city)
+		err = weather.SetCity(db, userID, city)
 
 		if err != nil {
 			bot.Send(tgbotapi.NewMessage(chatID, texts.ErrSaveCity))
@@ -114,7 +115,7 @@ func handleUserCity(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64, 
 		confirm.ReplyMarkup = removeKB
 		bot.Send(confirm)
 
-		bot.Send(messagebuilders.Weather(chatID, emoji, desc, city, temp))
+		bot.Send(messagebuilders.WeatherMessage(chatID, emoji, desc, city, temp))
 		return
 	}
 	removeKB := tgbotapi.NewRemoveKeyboard(true)
@@ -128,7 +129,7 @@ func handleUserCity(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64, 
 		return
 	}
 
-	err = weather.SetCity(userID, city)
+	err = weather.SetCity(db, userID, city)
 	if err != nil {
 		bot.Send(tgbotapi.NewMessage(chatID, texts.ErrSaveCity))
 		return
@@ -137,5 +138,5 @@ func handleUserCity(bot *tgbotapi.BotAPI, update tgbotapi.Update, chatID int64, 
 	confirm.ReplyMarkup = removeKB
 	bot.Send(confirm)
 
-	bot.Send(messagebuilders.Weather(chatID, emoji, desc, city, temp))
+	bot.Send(messagebuilders.WeatherMessage(chatID, emoji, desc, city, temp))
 }

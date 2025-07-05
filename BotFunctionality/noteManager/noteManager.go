@@ -2,101 +2,92 @@ package notemanager
 
 import (
 	texts "HelperBot/Data/textsUI"
-	"encoding/json"
+	"database/sql"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
-	"sync"
+	"time"
 )
 
-var (
-	UserNotes   = make(map[int64][]string)
-	storagePath = "UserDataStorage/userNotes.json"
-	mu          sync.Mutex
-)
+func AddNote(db *sql.DB, userID int64, note string) string {
 
-func AddNote(userID int64, addNote string) string {
-	mu.Lock()
-	UserNotes[userID] = append(UserNotes[userID], addNote)
-	mu.Unlock()
+	const query = `INSERT INTO notes (user_id, note, created_at)
+VALUES ($1, $2, $3);
+`
+	_, err := db.Exec(query, userID, note, time.Now())
+	if err != nil {
+		return texts.ErrAddNote
+	}
+	return fmt.Sprintf(texts.ReplyToUserAddNote, note)
 
-	saveToDisk()
-	return fmt.Sprintf(texts.ReplyToUserAddNote, addNote)
 }
 
-func DeleteNote(userID int64, number string) string {
-	mu.Lock()
-	noteNumber, _ := strconv.Atoi(number)
+func DeleteNote(db *sql.DB, userID int64, ordinal string) string {
+	const query = `DELETE FROM notes
+        WHERE id = (
+            SELECT id
+            FROM notes
+            WHERE user_id = $1
+            ORDER BY created_at
+            LIMIT 1
+            OFFSET $2
+        )`
+	indexNote, _ := strconv.Atoi(ordinal)
 
-	index := noteNumber - 1
-	userNotes, ok := UserNotes[userID]
-	if !ok || index < 0 || index >= len(userNotes) {
-		mu.Unlock()
-		return fmt.Sprintf(texts.ErrFailDeleteNote, noteNumber)
+	res, err := db.Exec(query, userID, indexNote-1)
+
+	if err != nil {
+		return err.Error()
 	}
-	removedNote := userNotes[index]
 
-	UserNotes[userID] = append(userNotes[:index], userNotes[index+1:]...)
-	mu.Unlock()
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err.Error()
+	}
 
-	saveToDisk()
-	return fmt.Sprintf(texts.ReplyToUserDeleteNote, removedNote)
+	if n == 0 {
+		return fmt.Sprintf(texts.ErrDeleteNote, indexNote)
+	}
+
+	return fmt.Sprintf(texts.ReplyToUserDeleteNote, indexNote)
 }
 
-func ShowNoteList(userID int64) string {
-	notes := UserNotes[userID]
-	if len(notes) == 0 {
-		return texts.ErrEmptyNoteList
+func NoteList(db *sql.DB, userID int64) string {
+
+	const query = `SELECT note
+	FROM notes
+	WHERE user_id=$1
+	ORDER BY created_at;
+	`
+	rows, err := db.Query(query, userID)
+	if err != nil {
+		return err.Error()
 	}
+	defer rows.Close()
 
 	var sb strings.Builder
-	sb.WriteString(texts.ReplyToUserShowAllNotes)
+	counter := 1
 
-	for i, note := range notes {
-		sb.WriteString(formatLine(i+1, note))
-	}
-	return sb.String()
-}
-
-func ClearNoteList(userID int64) {
-	mu.Lock()
-	delete(UserNotes, userID)
-	mu.Unlock()
-	saveToDisk()
-}
-
-func LoadFromDisk() error {
-	mu.Lock()
-	defer mu.Unlock()
-
-	info, _ := os.Stat(storagePath)
-
-	if info.Size() == 0 {
-		return nil
-	}
-
-	file, err := os.ReadFile(storagePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
+	for rows.Next() {
+		var note string
+		if err := rows.Scan(&note); err != nil {
+			return err.Error()
 		}
-		return err
+		sb.WriteString(fmt.Sprintf("%d. %s\n", counter, note))
+		counter++
 	}
-	return json.Unmarshal(file, &UserNotes)
+
+	noteList := sb.String()
+
+	return noteList
 }
 
-func formatLine(number int, note string) string {
-	return fmt.Sprintf("%v. %v\n", number, note)
-}
-
-func saveToDisk() error {
-	mu.Lock()
-	defer mu.Unlock()
-
-	data, err := json.MarshalIndent(UserNotes, "", " ")
+func ClearNoteList(db *sql.DB, userID int64) string {
+	const query = `DELETE FROM notes
+	 WHERE user_id = $1;`
+	_, err := db.Exec(query, userID)
 	if err != nil {
-		return err
+		return err.Error()
 	}
-	return os.WriteFile(storagePath, data, 0644)
+	return texts.ReplyToUserClearNote
 }

@@ -9,14 +9,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sync"
-)
-
-const storagePath = "C:\\Users\\user\\Desktop\\MyProject\\Go\\HelperBot\\UserDataStorage\\userCities.json"
-
-var (
-	userCities = make(map[int64]string)
-	mu         sync.Mutex
 )
 
 type Weather struct {

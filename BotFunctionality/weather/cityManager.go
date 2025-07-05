@@ -1,52 +1,41 @@
 package weather
 
 import (
-	"encoding/json"
-	"os"
+	texts "HelperBot/Data/textsUI"
+	"database/sql"
+	"fmt"
+	"time"
 )
 
-func LoadCities() error {
-	mu.Lock()
-	defer mu.Unlock()
+func GetUserCity(db *sql.DB, userID int64) (string, bool) {
+	const query = `
+	SELECT city
+	FROM user_cities
+	WHERE user_id=$1
+	`
+	var city string
+	err := db.QueryRow(query, userID).Scan(&city)
 
-	info, err := os.Stat(storagePath)
-	if os.IsNotExist(err) {
-		return nil
+	if err == sql.ErrNoRows {
+		return "", false
 	}
 	if err != nil {
-		return err
+		return "", false
 	}
-	if info.Size() == 0 {
-		return nil
-	}
-	data, err := os.ReadFile(storagePath)
+	return city, true
+}
+
+func SetCity(db *sql.DB, userID int64, city string) error {
+	const query = `
+	INSERT INTO user_cities (user_id, city, updated_at)
+	VALUES ($1, $2, $3)
+	ON CONFLICT (user_id) DO UPDATE
+		SET city = EXCLUDED.city,
+			updated_at = EXCLUDED.updated_at
+	`
+	_, err := db.Exec(query, userID, city, time.Now())
 	if err != nil {
-		return err
+		return fmt.Errorf("%v: %v", texts.ErrSaveCity, err)
 	}
-	return json.Unmarshal(data, &userCities)
-}
-
-func GetUserCity(userID int64) (string, bool) {
-	mu.Lock()
-	defer mu.Unlock()
-	city, ok := userCities[userID]
-	return city, ok
-}
-
-func SetCity(userID int64, city string) error {
-	mu.Lock()
-	userCities[userID] = city
-	mu.Unlock()
-	return saveCities()
-}
-
-func saveCities() error {
-	mu.Lock()
-	defer mu.Unlock()
-
-	data, err := json.MarshalIndent(userCities, "", " ")
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(storagePath, data, 0644)
+	return nil
 }

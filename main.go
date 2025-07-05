@@ -2,57 +2,36 @@ package main
 
 import (
 	query "HelperBot/BotFunctionality/Handler/Query"
-	usertext "HelperBot/BotFunctionality/Handler/usertexthandler"
-	notemanager "HelperBot/BotFunctionality/noteManager"
+	"HelperBot/BotFunctionality/Handler/usertexthandler"
 	setcommand "HelperBot/BotFunctionality/setCommand"
-	"HelperBot/BotFunctionality/weather"
+	initializationbot "HelperBot/InitializationBot"
 	"log"
-	"os"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	if err := weather.LoadCities(); err != nil {
-		log.Fatalf("Не удалось загрузить города пользователей %v", err)
-	}
-
-	err := notemanager.LoadFromDisk()
+	err := initializationbot.NewBot()
 	if err != nil {
-		log.Fatalf("Ошибка при загрузки заметок: %v", err)
+		log.Fatalf("Initialization failed: %v", err)
 	}
+	defer initializationbot.Instance.DB.Close()
 
-	err = godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error load env file %v", err)
-	}
-	botToken := os.Getenv("TOKEN_TELEGRAM_BOT")
-	if botToken == "" {
-		log.Fatalf("Token is not set")
-	}
+	setcommand.SetCommand(initializationbot.Instance.BotAPI)
 
-	bot, err := tgbotapi.NewBotAPI(botToken)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	setcommand.SetCommand(bot)
-
-	log.Printf("Autorization on account %v", bot.Self.UserName)
+	log.Printf("Autorization on account %v", initializationbot.Instance.BotAPI.Self.UserName)
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 
-	updates := bot.GetUpdatesChan(u)
+	updates := initializationbot.Instance.BotAPI.GetUpdatesChan(u)
 
 	for update := range updates {
 		if update.Message != nil {
-			usertext.UserTextHandler(bot, update)
+			usertexthandler.UserTextHandler(initializationbot.Instance.BotAPI, initializationbot.Instance.DB, update)
 		}
 		if update.CallbackQuery != nil {
-			query.QueryHandler(bot, update)
+			query.QueryHandler(initializationbot.Instance.BotAPI, update)
 		}
 	}
-
 }

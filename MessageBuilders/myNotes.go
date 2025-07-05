@@ -7,7 +7,7 @@ import (
 )
 
 func ConfigUserNotes(chatID int64, messageID int) tgbotapi.EditMessageTextConfig {
-	userNotesMessage := tgbotapi.NewEditMessageText(chatID, messageID, texts.NotesText)
+	userNotesMessage := tgbotapi.NewEditMessageText(chatID, messageID, texts.ReplyToUserNotesText)
 
 	showAllNotes := tgbotapi.NewInlineKeyboardButtonData(texts.ShowAllNotesButtonText, texts.ShowAllNotesButtonData)
 	clearAllNotes := tgbotapi.NewInlineKeyboardButtonData(texts.ClearAllNotesButtonText, texts.ClearAllNotesButtonData)
@@ -27,7 +27,7 @@ func ConfigUserNotes(chatID int64, messageID int) tgbotapi.EditMessageTextConfig
 }
 
 func ConfigUserNotesMessage(chatID int64) tgbotapi.MessageConfig {
-	userNotesMessage := tgbotapi.NewMessage(chatID, texts.NotesText)
+	userNotesMessage := tgbotapi.NewMessage(chatID, texts.ReplyToUserNotesText)
 
 	showAllNotes := tgbotapi.NewInlineKeyboardButtonData(texts.ShowAllNotesButtonText, texts.ShowAllNotesButtonData)
 	clearAllNotes := tgbotapi.NewInlineKeyboardButtonData(texts.ClearAllNotesButtonText, texts.ClearAllNotesButtonData)
