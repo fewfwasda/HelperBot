@@ -1,7 +1,7 @@
 package setcommand
 
 import (
-	botcommandtext "HelperBot/Data/botCommandText"
+	botcommandtext "HelperBot/Data/botcommanddesctext"
 	texts "HelperBot/Data/textsUI"
 	"log"
 

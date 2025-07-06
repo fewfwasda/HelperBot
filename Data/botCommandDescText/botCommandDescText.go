@@ -1,4 +1,4 @@
-package botcommandtext
+package botcommanddesctext
 
 const (
 	ShowWeather     = "show_weather"
