@@ -1,17 +1,12 @@
-# Stage 1: сборка приложения
-FROM golang:1.24.4-alpine AS builder
+FROM golang:1.24.4-alpine
+
 WORKDIR /app
 
 COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARH=amd64 \ 
-    go build -o helperbot
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/bot ./cmd
 
-# Stage 2: минимальный рантайм
-FROM alpine:latest
-WORKDIR /root/
-
-COPY --from=builder /app/helperbot .
-
-ENTRYPOINT [ "./helperbot" ]
+CMD ["/app/bot"]
