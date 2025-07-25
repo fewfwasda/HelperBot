@@ -1,9 +1,9 @@
 -- +goose Up
 CREATE TABLE text_ui (
-    id SERIAL,
+    id serial,
     title text,
     content text,
-    PRIMARY KEY (id)
+    primary key (id)
 );
 
 INSERT INTO text_ui (title, content) VALUES

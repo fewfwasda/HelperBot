@@ -21,3 +21,8 @@ func NewBot(cfg config.BotConfig) (*Bot, error) {
 		UpdateTimeout: cfg.UpdateBotTimeout,
 	}, nil
 }
+func (b Bot) GetUpdateConfig() tgbotapi.UpdateConfig {
+	updateConfig := tgbotapi.NewUpdate(0)
+	updateConfig.Timeout = b.UpdateTimeout
+	return updateConfig
+}
